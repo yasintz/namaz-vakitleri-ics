@@ -1,103 +1,120 @@
-import Image from "next/image";
+import PrayerTimesForm from '@/components/PrayerTimesForm';
+import { fetchAllData } from '@/lib/api';
 
-export default function Home() {
+export default async function Home() {
+  // Fetch all hierarchical data server-side
+  let hierarchicalData;
+  let error: string | null = null;
+
+  try {
+    hierarchicalData = await fetchAllData();
+  } catch (err) {
+    console.error('Failed to fetch data:', err);
+    error = 'Failed to load location data. Please try refreshing the page.';
+    // Provide fallback empty data structure
+    hierarchicalData = {
+      countries: [],
+      flatCountries: [],
+      flatCities: [],
+      flatDistricts: [],
+    };
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">
+              🕌 Prayer Times Calendar Generator
+            </h1>
+            <p className="text-lg text-gray-600">
+              Generate ICS calendar URL for Islamic prayer times from anywhere in the world
+            </p>
+            {hierarchicalData.flatCountries.length > 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                ✅ {hierarchicalData.flatCountries.length} countries, {hierarchicalData.flatCities.length} cities, {hierarchicalData.flatDistricts.length} districts loaded
+              </p>
+            )}
+          </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          {/* Show error if data fetching failed */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Prayer Times Form Component */}
+          <PrayerTimesForm hierarchicalData={hierarchicalData} />
+
+          {/* Instructions Card */}
+          <div className="bg-blue-50 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-blue-800 mb-3">
+              📱 How to Use Your Calendar
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Live Subscription Instructions */}
+              <div>
+                <h4 className="font-semibold text-blue-700 mb-2">
+                  Live Calendar Subscription
+                </h4>
+                <ul className="space-y-2 text-blue-700 text-sm">
+                  <li className="flex items-start">
+                    <span className="mr-2">1️⃣</span>
+                    <span>
+                      Select your location and click &quot;Copy ICS URL&quot;
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">2️⃣</span>
+                    <span>
+                      In your calendar app, choose &quot;Subscribe to
+                      Calendar&quot; or &quot;Add Calendar by URL&quot;
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">3️⃣</span>
+                    <span>
+                      Paste the copied URL - your calendar will automatically
+                      update with new prayer times!
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Calendar App Instructions */}
+              <div className="text-xs text-blue-600 bg-blue-100 rounded-lg p-3">
+                <p className="font-semibold mb-2">📱 For different calendar apps:</p>
+                <ul className="space-y-1">
+                  <li><strong>iPhone/iPad:</strong> Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar</li>
+                  <li><strong>Google Calendar:</strong> Other calendars → + → From URL</li>
+                  <li><strong>Outlook:</strong> Add calendar → Subscribe from web</li>
+                  <li><strong>Thunderbird:</strong> Calendar → New Calendar → On the Network</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-8 text-gray-500 text-sm">
+            <p>
+              Prayer times data provided by{' '}
+              <a
+                href="https://ezanvakti.emushaf.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Ezan Vakti API
+              </a>
+            </p>
+            <p className="mt-2">May Allah accept your prayers 🤲</p>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
