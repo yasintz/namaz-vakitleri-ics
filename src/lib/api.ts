@@ -57,11 +57,15 @@ export interface HierarchicalData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ezanvakti.emushaf.net';
 
-// Generic API request function
+// Generic API request function with 10-day caching
 async function apiRequest<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+    },
+    next: {
+      // Cache for 10 days (10 * 24 * 60 * 60 = 864000 seconds)
+      revalidate: 864000,
     },
   });
 
