@@ -1,11 +1,7 @@
 'use server';
 import { headers } from 'next/headers';
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: { districtID: string; lang: string };
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ districtID: string; lang: string }> }) {
   const host = (await headers()).get('host');
   const protocol = (await headers()).get('x-forwarded-proto');
   const { districtID, lang } = await searchParams;
