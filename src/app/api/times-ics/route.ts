@@ -12,21 +12,12 @@ function toDate(date: Date, time: string): Date {
   // Fix timezone issue: Prayer times from the API are in Turkey local time (UTC+3),
   // but when the server runs in UTC, these times get interpreted as UTC times.
   // This causes a 3-hour offset in Google Calendar.
-  
+
   // Turkey timezone offset: UTC+3 (180 minutes)
   const TURKEY_OFFSET_MINUTES = 3 * 60;
-  
-  // Get server's timezone offset (in minutes from UTC)
-  // Note: getTimezoneOffset() returns positive values for UTC- and negative for UTC+
-  const serverOffsetMinutes = newDate.getTimezoneOffset();
-  
-  // Calculate adjustment needed to convert from server time to Turkey time
-  // If server is UTC (offset = 0), we need to subtract 180 minutes to get Turkey time
-  // If server is already Turkey time (offset = -180), no adjustment needed
-  const adjustmentMinutes = TURKEY_OFFSET_MINUTES + serverOffsetMinutes;
-  
+
   // Apply the adjustment
-  newDate.setMinutes(newDate.getMinutes() - adjustmentMinutes);
+  newDate.setMinutes(newDate.getMinutes() - TURKEY_OFFSET_MINUTES);
 
   return newDate;
 }
