@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import {
-  getDisplayName,
-  type HierarchicalData,
-} from '@/lib/api';
+import { getDisplayName, type HierarchicalData } from '@/lib/api';
 
 interface PrayerTimesFormProps {
   hierarchicalData: HierarchicalData;
 }
 
-export default function PrayerTimesForm({ hierarchicalData }: PrayerTimesFormProps) {
+export default function PrayerTimesForm({
+  hierarchicalData,
+}: PrayerTimesFormProps) {
   // State for selections
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
@@ -25,16 +24,18 @@ export default function PrayerTimesForm({ hierarchicalData }: PrayerTimesFormPro
   // Get available cities for the selected country
   const availableCities = useMemo(() => {
     if (!selectedCountry) return [];
-    
-    const country = hierarchicalData.countries.find(c => c.UlkeID === selectedCountry);
+
+    const country = hierarchicalData.countries.find(
+      (c) => c.UlkeID === selectedCountry
+    );
     return country ? country.cities : [];
   }, [selectedCountry, hierarchicalData.countries]);
 
   // Get available districts for the selected city
   const availableDistricts = useMemo(() => {
     if (!selectedCity) return [];
-    
-    const city = availableCities.find(c => c.SehirID === selectedCity);
+
+    const city = availableCities.find((c) => c.SehirID === selectedCity);
     return city ? city.districts : [];
   }, [selectedCity, availableCities]);
 
@@ -64,6 +65,7 @@ export default function PrayerTimesForm({ hierarchicalData }: PrayerTimesFormPro
     const params = new URLSearchParams({
       districtID: selectedDistrict,
       lang: language,
+      now: Date.now().toString(),
     });
 
     const currentHost =
@@ -139,7 +141,9 @@ export default function PrayerTimesForm({ hierarchicalData }: PrayerTimesFormPro
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-100 text-black"
           >
             <option value="">
-              {!selectedCountry ? 'Select a country first...' : 'Choose a city...'}
+              {!selectedCountry
+                ? 'Select a country first...'
+                : 'Choose a city...'}
             </option>
             {availableCities.map((city) => (
               <option key={city.SehirID} value={city.SehirID}>
@@ -165,7 +169,9 @@ export default function PrayerTimesForm({ hierarchicalData }: PrayerTimesFormPro
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-100 text-black"
           >
             <option value="">
-              {!selectedCity ? 'Select a city first...' : 'Choose a district...'}
+              {!selectedCity
+                ? 'Select a city first...'
+                : 'Choose a district...'}
             </option>
             {availableDistricts.map((district) => (
               <option key={district.IlceID} value={district.IlceID}>
@@ -246,4 +252,4 @@ export default function PrayerTimesForm({ hierarchicalData }: PrayerTimesFormPro
       </div>
     </div>
   );
-} 
+}
