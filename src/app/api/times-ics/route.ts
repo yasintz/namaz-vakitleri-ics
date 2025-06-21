@@ -63,6 +63,7 @@ function toEvent(
     busyStatus: 'BUSY',
     categories: ['Prayer Time', 'Islamic'],
     description: `${titleMap[time]} - Prayer time reminder`,
+    uid: `${date.getTime()}-${time}`,
   };
 
   return event;
@@ -85,27 +86,14 @@ export async function GET(req: NextRequest) {
   const districtID =
     searchParams.get('districtID') || searchParams.get('ilceID');
   // Support backward compatibility with old parameters
-  const countryID = searchParams.get('countryID') || searchParams.get('cityID');
   const language = (searchParams.get('lang') as 'tr' | 'en') || 'tr';
 
   try {
-    if (!districtID && !countryID) {
+    if (!districtID) {
       return NextResponse.json(
         {
-          error:
-            'Missing districtID parameter. Use districtID to specify the district for prayer times.',
+          error: 'Missing districtID parameter.',
           hint: 'Use /ulkeler, /sehirler/{ulke}, and /ilceler/{sehir} endpoints to find the correct district ID.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // If only countryID is provided, return error asking for district ID
-    if (!districtID && countryID) {
-      return NextResponse.json(
-        {
-          error: 'districtID is required. countryID alone is not sufficient.',
-          hint: 'Please select a city and district first. Use the frontend to navigate: Country → City → District.',
         },
         { status: 400 }
       );
