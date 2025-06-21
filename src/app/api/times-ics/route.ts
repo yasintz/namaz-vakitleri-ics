@@ -3,26 +3,27 @@ import { DateTime } from "luxon";
 import * as ics from "ics";
 import { ezanVaktiApi, type Vakit } from "@/lib/api";
 
-function toDate(date: Date, time: string): Date {
+function toDate(date: Date, time: string): DateTime {
   const [hour, minute] = time.split(":");
 
-  const newDate = DateTime.fromJSDate(date).set({
+  // Create the date in Turkey timezone (Europe/Istanbul - GMT+3)
+  const newDate = DateTime.fromJSDate(date, { zone: 'Europe/Istanbul' }).set({
     hour: parseInt(hour, 10),
     minute: parseInt(minute, 10),
     second: 0,
     millisecond: 0,
   });
 
-  return newDate.toJSDate();
+  return newDate;
 }
 
-function toStart(date: Date): ics.EventAttributes["start"] {
+function toStart(dateTime: DateTime): ics.EventAttributes["start"] {
   return [
-    date.getFullYear(),
-    date.getMonth() + 1,
-    date.getDate(),
-    date.getHours(),
-    date.getMinutes(),
+    dateTime.year,
+    dateTime.month,
+    dateTime.day,
+    dateTime.hour,
+    dateTime.minute,
   ];
 }
 
@@ -53,17 +54,20 @@ const titleMapEN: Record<TimeEnum, string> = {
   [TimeEnum.Night]: "Isha Prayer",
 };
 
-function toEvent(date: Date, time: TimeEnum, language: 'tr' | 'en' = 'tr'): ics.EventAttributes {
+function toEvent(dateTime: DateTime, time: TimeEnum, language: 'tr' | 'en' = 'tr'): ics.EventAttributes {
   const titleMap = language === 'tr' ? titleMapTR : titleMapEN;
   
   const event: ics.EventAttributes = {
-    start: toStart(date),
+    start: toStart(dateTime),
+    startInputType: 'local',
+    startOutputType: 'utc',
     duration: { hours: 0, minutes: 15 },
     title: titleMap[time],
     status: "CONFIRMED",
     busyStatus: "BUSY",
     categories: ["Prayer Time", "Islamic"],
     description: `${titleMap[time]} - Prayer time reminder`,
+    geo: { lat: 41.0082, lon: 28.9784 }, // Istanbul coordinates as reference
   };
 
   return event;
@@ -71,11 +75,25 @@ function toEvent(date: Date, time: TimeEnum, language: 'tr' | 'en' = 'tr'): ics.
 
 function createEventsPromise(events: ics.EventAttributes[]): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    ics.createEvents(events, (error, value) => {
+    ics.createEvents(events, {
+      productId: 'Prayer Times Calendar',
+      calName: 'Islamic Prayer Times'
+    }, (error, value) => {
       if (error) {
         reject(error);
       } else {
-        resolve(value);
+        // Add timezone information to the ICS content
+        let modifiedValue = value?.replace(
+          'BEGIN:VCALENDAR',
+          'BEGIN:VCALENDAR\r\nBEGIN:VTIMEZONE\r\nTZID:Europe/Istanbul\r\nBEGIN:STANDARD\r\nDTSTART:20071028T040000\r\nTZNAME:+03\r\nTZOFFSETFROM:+0300\r\nTZOFFSETTO:+0300\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\nEND:STANDARD\r\nEND:VTIMEZONE'
+        );
+        
+        // Add timezone reference to each event
+        modifiedValue = modifiedValue?.replace(
+          /DTSTART:(\d{8}T\d{6}Z?)/g,
+          'DTSTART;TZID=Europe/Istanbul:$1'.replace('Z', '')
+        );
+        resolve(modifiedValue || '');
       }
     });
   });
